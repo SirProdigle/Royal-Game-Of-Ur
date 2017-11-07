@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Chip : MonoBehaviour {
+public class Chip : MonoBehaviour
+{
 	[SerializeField]
 	//TODO make some kind of TileManager to handle this
 	public Vector3 startPosition;
@@ -53,11 +54,11 @@ public class Chip : MonoBehaviour {
 					tileToMoveTo = tileToMoveTo.GetNextTile (this);
 					if (tileToMoveTo == null) {
 						//We scored a point. Add 1 and get rid of chip
+						//TODO animate going into pile
 						Destroy (this.gameObject);
 					}
 				}
 			}
-			//TODO add some animation before this line for the transform
 			if (tileToMoveTo.OccupyingChip == null) {
 				if (currentTile != null)
 					currentTile.OccupyingChip = null;
@@ -65,7 +66,6 @@ public class Chip : MonoBehaviour {
 				currentTile.OccupyingChip = this;
 			} else if (tileToMoveTo.OccupyingChip.Team == this.Team) {
 				throw new UnityException ("Can't land on place where we have a chip");
-				return;
 			} else if (tileToMoveTo.OccupyingChip.Team != this.Team) {
 				Chip enemyChip = tileToMoveTo.OccupyingChip;
 				if (enemyChip.Invincible) {
@@ -74,7 +74,6 @@ public class Chip : MonoBehaviour {
 				}
 				enemyChip.transform.position = enemyChip.startPosition;
 				enemyChip.currentTile = null;
-				//TODO take back to start
 				tileToMoveTo.OccupyingChip = null;
 				if (currentTile != null)
 					currentTile.OccupyingChip = null;
@@ -84,12 +83,45 @@ public class Chip : MonoBehaviour {
 
 			//We have our tile to move to
 			Invincible = false;
-			this.transform.position = tileToMoveTo.transform.position;
-			diceManager.CanMove = false;
-			currentTile.OnChipLand ();
-			turnManager.NextTurn ();
+
+			//TODO Animation
+			StartCoroutine (GoToPosition (tileToMoveTo.transform.position));
+			//this.transform.position = tileToMoveTo.transform.position;
+			//diceManager.CanMove = false;
+			//currentTile.OnChipLand ();
+			//turnManager.NextTurn ();
 		} else {
 			Debug.Log ("Tried to click chip of another player");
 		}
+	}
+
+
+	Vector3 velocity = Vector3.zero;
+	[SerializeField]
+	AudioSource chipUp;
+	[SerializeField]
+	AudioSource chipDown;
+
+	IEnumerator GoToPosition (Vector3 endPos)
+	{
+		float smoothTime = 0.5f;
+		Vector3 endUpPos = this.transform.position + Vector3.up;
+		chipUp.Play ();
+		while (this.transform.position != endUpPos) {
+			transform.position = Vector3.SmoothDamp (this.transform.position, endUpPos, ref velocity, smoothTime / 8);
+			yield return null;
+		}
+		while (this.transform.position != endPos + Vector3.up) {
+			transform.position = Vector3.SmoothDamp (this.transform.position, endPos + Vector3.up, ref velocity, smoothTime / 4);
+			yield return null;
+		}
+		while (this.transform.position != endPos) {
+			transform.position = Vector3.SmoothDamp (this.transform.position, endPos, ref velocity, smoothTime / 8);
+			yield return null;
+		}
+		chipDown.Play ();
+		diceManager.CanMove = false;
+		currentTile.OnChipLand ();
+		turnManager.NextTurn ();
 	}
 }
