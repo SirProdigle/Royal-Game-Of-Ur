@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DiceManager : MonoBehaviour {
+public class DiceManager : MonoBehaviour
+{
+
+	[SerializeField]
+	AudioSource diceRoll;
 
 	public int[] DiceRolls {
 		get;
@@ -43,6 +47,7 @@ public class DiceManager : MonoBehaviour {
 			}
 			Debug.Log ("Dice: " + DiceRolls [0] + " " + DiceRolls [1] + " " + +DiceRolls [2] + " " + DiceRolls [3] + " " + " (" + DiceTotal + ")");
 			CanMove = true;
+			diceRoll.Play ();
 		}
 	}
 }
